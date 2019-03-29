@@ -1,0 +1,2 @@
+# Thinkphp5VideoUpload
+thinPHP5实现视频大文件分割分片上传
