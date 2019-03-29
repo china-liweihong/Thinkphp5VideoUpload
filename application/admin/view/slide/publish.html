@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>layui</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="__PUBLIC__/layui/css/layui.css"  media="all">
+  <link rel="stylesheet" href="__PUBLIC__/font-awesome/css/font-awesome.min.css" media="all" />
+  <link rel="stylesheet" href="__CSS__/admin.css"  media="all">
+  <style>
+    #progress{
+      width: 300px;
+      height: 30px;
+      background-color:#f7f7f7;
+      box-shadow:inset 0 1px 2px rgba(0,0,0,0.1);
+      border-radius:4px;
+      background-image:linear-gradient(to bottom,#f5f5f5,#f9f9f9);
+      margin-bottom: 5px;
+    }
+
+    #finish{
+      background-color: #149bdf;
+      background-image:linear-gradient(45deg,rgba(255,255,255,0.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0.15) 75%,transparent 75%,transparent);
+      background-size:40px 40px;
+      height: 100%;
+    }
+    form{
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body style="padding:10px;">
+  <div class="tplay-body-div">
+    <div class="layui-tab">
+      <ul class="layui-tab-title">
+        <li><a href="{:url('admin/slide/index')}" class="a_menu">广告管理</a></li>
+        <li class="layui-this">新增广告</li>
+      </ul>
+    </div>
+    <div style="margin-top: 20px;">
+    </div>
+    <form class="layui-form" id="admin">
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">标题</label>
+        <div class="layui-input-block" style="max-width:600px;">
+          <input name="title" lay-verify="title" autocomplete="off" placeholder="请输入标题" class="layui-input" type="text" {notempty name="$slide.title"}value="{$slide.title}"{/notempty}>
+        </div>
+      </div>
+
+      <!-- <div class="layui-form-item">
+        <label class="layui-form-label">链接</label>
+        <div class="layui-input-block" style="max-width:600px;">
+          <input name="src" lay-verify="src" autocomplete="off" placeholder="请输入链接" class="layui-input" type="text" {notempty name="$slide.src"}value="{$slide.src}"{/notempty}>
+        </div>
+      </div> -->
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">类型</label>
+        <div class="layui-input-inline">
+          <select name="type" class="select_type" lay-filter="adtype">
+            <option value="">请选择广告类型</option>
+            <option value="1" {notempty name="$slide.type"}{eq name="$slide.type" value="1"} selected=""{/eq}{/notempty}>图片</option>
+            <option value="2" {notempty name="$slide.type"}{eq name="$slide.type" value="2"} selected=""{/eq}{/notempty}>视频</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">设备</label>
+        <div class="layui-input-inline">
+          <select name="doorcontroller_id" lay-filter="aihao">
+            <option value="">请选择设备</option>
+            {volist name="$doorcontrollers" id="vo"}
+            <option value="{$vo.id}" {notempty name="$slide.doorcontroller_id"}{eq name="$slide.doorcontroller_id" value="$vo.id"} selected=""{/eq}{/notempty}>{$vo.address|getNameByAddress=$vo.admin_id,$vo.id}</option>
+            {/volist}
+          </select>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">起始期</label>
+        <div class="layui-input-inline">
+          <div class="layui-inline">
+            <div class="layui-input-inline">
+              <input type="text" class="layui-input"  id="starttime" placeholder="起始日期" {notempty name="$slide.starttime"}value="{$slide.starttime|date='Y-n-j',###}"{/notempty}  name="starttime">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">截止期</label>
+        <div class="layui-input-inline">
+          <div class="layui-inline">
+            <div class="layui-input-inline">
+              <input type="text" class="layui-input"  id="overtime" placeholder="截止日期" {notempty name="$slide.overtime"}value="{$slide.overtime|date='Y-n-j',###}"{/notempty}  name="overtime">
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="layui-upload" id="upload-video" style="display:none;">
+        <label class="layui-form-label">上传视频</label>
+        <!-- <button type="button" class="layui-btn" id="thumb">上传视频</button> -->
+        <div class="layui-input-inline" style="margin-bottom: 20px;">
+          <div id="progress">
+            <div id="finish" style="width: 0%;" progress="0"></div>
+          </div>
+          <input type="file" name="file" id="file">
+          <input type="button" value="停止" id="stop">
+        </div>      
+      </div>
+
+      <div class="layui-upload" id="upload-thumb">
+        <label class="layui-form-label">缩略图</label>
+        <button type="button" class="layui-btn" id="thumb">上传图片</button>
+        <div class="layui-upload-list">
+          <label class="layui-form-label"></label>
+          <img class="layui-upload-img" id="demo1" width="150" height="150" {notempty name="$slide.thumb"}src="{$slide.thumb|geturl}"{/notempty}>{notempty name="$slide.thumb"}<input type="hidden" name="thumb" value="{$slide.thumb}">{/notempty}
+          <p id="demoText"></p>
+        </div>
+      </div>
+
+      {notempty name="$slide"}
+      <input type="hidden" name="id" value="{$slide.id}">
+      {/notempty}
+      <div class="layui-form-item">
+        <div class="layui-input-block">
+          <button class="layui-btn" lay-submit lay-filter="admin">立即提交</button>
+          <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+      </div>
+    </form>
+
+    <script src="__PUBLIC__/layui/layui.js"></script>
+    <script src="__PUBLIC__/jquery/jquery.min.js"></script>
+
+    <script>
+    $(document).ready(function(){
+      var val=$(".select_type").val();
+      if(val==2){
+        $("#upload-video").css("display","block");
+        $("#upload-thumb").css("display","none");
+      }
+    });
+
+    layui.use('upload', function(){
+      var upload = layui.upload;
+      //执行实例
+      var uploadInst = upload.render({
+        elem: '#thumb' //绑定元素
+        ,url: "{:url('common/upload')}" //上传接口
+        ,data:{use:'slide_thumb'}
+        ,done: function(res){
+          //上传完毕回调
+          if(res.code == 2) {
+            $('#demo1').attr('src',res.src);
+            $('#upload-thumb').append('<input type="hidden" name="thumb" value="'+ res.id +'">');
+          } else {
+            layer.msg(res.msg);
+          }
+        }
+        ,error: function(){
+          //请求异常回调
+          //演示失败状态，并实现重传
+          var demoText = $('#demoText');
+          demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+          demoText.find('.demo-reload').on('click', function(){
+            uploadInst.upload();
+          });
+        }
+      });
+    });
+    </script>
+    <script>
+
+      layui.use(['layer', 'form'], function() {
+          var layer = layui.layer,
+              $ = layui.jquery,
+              form = layui.form;
+
+              form.on('select(adtype)', function(data){
+                var valset=data.value;
+                if(valset==2){
+                  $("#upload-video").css("display","block");
+                  $("#upload-thumb").css("display","none");
+                }else{
+                  $("#upload-video").css("display","none");
+                  $("#upload-thumb").css("display","block");
+                }
+                // alert(data.value);
+                // console.log(data.elem); //得到select原始DOM对象
+                // console.log(data.value); //得到被选中的值
+                // console.log(data.othis); //得到美化后的DOM对象
+              });
+
+          $(window).on('load', function() {
+              form.on('submit(admin)', function(data) {
+                  $.ajax({
+                      url:"{:url('admin/slide/publish')}",
+                      data:$('#admin').serialize(),
+                      type:'post',
+                      async: false,
+                      success:function(res) {
+                          if(res.code == 1) {
+                              layer.alert(res.msg, function(index){
+                                location.href = res.url;
+                              })
+                          } else {
+                              layer.msg(res.msg);
+                          }
+                      }
+                  })
+                  return false;
+              });
+          });
+      });
+    </script>
+    <script>
+    layui.use('laydate', function(){
+    var laydate = layui.laydate;
+    //执行一个laydate实例
+    laydate.render({
+      elem: '#starttime' //指定元素
+    });
+    //执行一个laydate实例
+    laydate.render({
+      elem: '#overtime' //指定元素
+    });
+    });
+    </script>
+    <!-- 视频上传-->
+    <script>
+      var fileForm = document.getElementById("file");
+      var stopBtn = document.getElementById('stop');
+      var upload = new Upload();
+
+      fileForm.onchange = function(){
+        upload.addFileAndSend(this);
+      }
+
+      stopBtn.onclick = function(){
+        this.value = "停止中";
+        upload.stop();
+        this.value = "已停止";
+      }
+
+      function Upload(){
+        var xhr = new XMLHttpRequest();
+        var form_data = new FormData();
+        const LENGTH = 1024 * 1024;
+        var start = 0;
+        var end = start + LENGTH;
+        var blob;
+        var blob_num = 1;
+        var is_stop = 0
+        //对外方法，传入文件对象
+        this.addFileAndSend = function(that){
+          var file = that.files[0];
+          if(file.size>1024*100*1024){
+            alert('上传文件不能大于100M');
+            // alert(file.name);
+            // alert(file.size);
+            return false;
+          }
+          //验证上传文件后缀
+          var flag = false; //状态
+          var arr = ["avi","mp4"];
+          //取出上传文件的扩展名
+          var index = file.name.lastIndexOf(".");
+          var ext = file.name.substr(index+1);
+          //循环比较
+          for(var i=0;i<arr.length;i++){
+            if(ext == arr[i]){
+              flag = true; //一旦找到合适的，立即退出循环
+             break;
+            }
+           }
+           //条件判断
+           if(flag){
+            //  alert("文件名合法");
+           }else{
+             alert("上传文件不合法");
+             return false;
+           }
+           //验证上传文件后缀  end
+           
+          blob = cutFile(file);
+          sendFile(blob,file);
+          blob_num += 1;
+        }
+        //停止文件上传
+        this.stop = function(){
+          xhr.abort();
+          is_stop = 1;
+        }
+        //切割文件
+        function cutFile(file){
+          var file_blob = file.slice(start,end);
+          start = end;
+          end = start + LENGTH;
+          return file_blob;
+        };
+        //发送文件
+        function sendFile(blob,file){
+          var total_blob_num = Math.ceil(file.size / LENGTH);
+          form_data.append('file',blob);
+          form_data.append('blob_num',blob_num);
+          form_data.append('total_blob_num',total_blob_num);
+          form_data.append('file_name',file.name);
+          form_data.append('file_size',file.size);
+
+          xhr.open('POST',"{:url('tools/video/uploadvideofile')}",false);
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                // console.log(xhr.responseText);
+                var data=JSON.parse(xhr.responseText);
+                // alert(data.code);
+                // alert(data.thumb_id);
+                if(data.thumb_id>0){
+                    $('#upload-video').append('<input type="hidden" name="thumb" value="'+ data.thumb_id +'">');
+                }
+
+             };
+
+            var progress;
+            var progressObj = document.getElementById('finish');
+            if(total_blob_num == 1){
+              progress = '100%';
+            }else{
+              progress = Math.min(100,(blob_num/total_blob_num)* 100 ) +'%';
+            }
+            progressObj.style.width = progress;
+            var t = setTimeout(function(){
+              if(start < file.size && is_stop === 0){
+                blob = cutFile(file);
+                sendFile(blob,file);
+                blob_num += 1;
+              }else{
+                setTimeout(t);
+              }
+            },1000);
+          }
+          xhr.send(form_data);
+        }
+      }
+
+    </script>
+    <!-- 视频上传 end-->
+  </div>
+</body>
+</html>
